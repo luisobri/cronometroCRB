@@ -1,0 +1,86 @@
+#include <TimerOne.h>
+#include <Wire.h>
+#include <MultiFuncShield.h>
+
+volatile int LDR;
+volatile unsigned int clockMilliSeconds = 0;
+volatile byte clockCentiSeconds = 0;
+volatile byte clockSeconds = 0;
+volatile bool coche = false;
+volatile int pasada = 0;
+
+static byte LDR_MIN=180;
+
+
+void setup()
+{
+  Timer1.initialize();
+  MFS.userInterrupt = clockISR;
+  MFS.initialize(&Timer1);
+  MFS.blinkDisplay(DIGIT_ALL);
+  MFS.beep(100);
+  Serial.begin(9600);
+}
+
+void loop()
+{
+  displayTime(clockSeconds, clockCentiSeconds);
+}
+
+//---------------------------------------------------------
+void displayTime (byte seconds, byte centiseconds)
+{
+  char time[5];
+  sprintf(time, "%03d", (seconds * 100) + centiseconds);
+  MFS.write(time, 1);
+}
+
+//--------------------------------------------------------------------------------------------------
+void clockISR ()
+{
+  LDR = analogRead(A5);
+  // Set inicial, tiempo a cero?
+  if (LDR <= LDR_MIN && pasada < 1)
+  {
+    MFS.beep(20);
+    pasada++;
+    if (pasada == 1) coche = true;
+  }
+
+  // Primera vuelta
+  if (LDR > 500 && pasada == 1)
+  {
+    pasada++;
+  }
+
+  if (LDR <= LDR_MIN && pasada == 2 && clockSeconds > 5)
+  {
+    coche = false;
+    MFS.beep(20, 2, 8);
+  }
+
+  if (coche == true)
+  {
+    clockMilliSeconds++;
+    if (clockMilliSeconds >= 10)
+    {
+      clockMilliSeconds = 0;
+      clockCentiSeconds++;
+
+      if (clockCentiSeconds >= 100)
+      {
+        clockCentiSeconds = 0;
+        clockSeconds++;
+        Serial.println(coche);
+        Serial.println(LDR);
+        
+        if (clockSeconds >= 100)
+        {
+          clockCentiSeconds = 0;
+          clockCentiSeconds = 0;
+          clockSeconds = 0;
+        }
+      }
+    }
+  }
+}
