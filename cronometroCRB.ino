@@ -8,9 +8,9 @@ int pasada = 0;
 
 static byte LDR_MIN = 180;
 static byte numeroVueltas = 1; // Numero de vueltas que contaremos
-unsigned int vuelta[4];
-unsigned int total = 0;
-unsigned int masRapida = 99999;
+unsigned long vuelta[4];
+unsigned long total = 0;
+unsigned long masRapida = 99999;
 
 boolean isr = false;
 boolean isrC = false;
@@ -23,16 +23,23 @@ void setup()
   MFS.blinkDisplay(DIGIT_ALL);
   MFS.beep(10);
   Serial.begin(115200); // Mas velocidad -> menos tiempo para escribir por el puerto serie
+
+  // Ponemos el marcador a cero
+  char time[5];
+  sprintf(time, "%04d", 0);
+  MFS.write(time, 1);
 }
 
 void loop()
 {
   char time[5];
-  unsigned long m=millis();
+  unsigned long m = millis();
   comprobarPaso(m);
-  // Imprimimos el tiempo
-  sprintf(time, "%04d", m/100);
-  MFS.write(time, 1);
+  if (haEmpezado) {
+    // Imprimimos el tiempo
+    sprintf(time, "%04d", m - vuelta[0]);
+    MFS.write(time, 1);
+  }
 }
 
 
@@ -40,7 +47,7 @@ void loop()
 void comprobarPaso(unsigned long m) {
   unsigned int tmp = 0;
   char time[5];
-  
+
   LDR = analogRead(A5);
   if (LDR < LDR_MIN) { // Haz cortado
     if (haEmpezado) { // Ya ha arrancado la carrera
@@ -54,9 +61,9 @@ void comprobarPaso(unsigned long m) {
         total = 0;
         // Calculamos el total y la vuelta mas rapida
         for (unsigned int i = 1; i <= numeroVueltas; i++) {
-          tmp=vuelta[i]-vuelta[i-1]; // Calculamos el tiempo de vuelta
+          tmp = vuelta[i] - vuelta[i - 1]; // Calculamos el tiempo de vuelta
           total += tmp;
-          if (masRapida>tmp) masRapida=tmp;
+          if (masRapida > tmp) masRapida = tmp;
         }
         // Ponemos los datos en bucle
         while (1) {
@@ -73,11 +80,11 @@ void comprobarPaso(unsigned long m) {
           MFS.write(time, 1);
           delay(1000);
         }
-      }      
+      }
     } else {
       MFS.blinkDisplay(DIGIT_ALL, 0);
       haEmpezado = true; // ¡Arrancamos la carrera!
-      vuelta[0]=m; // Inicio de la carrera
+      vuelta[0] = m; // Inicio de la carrera
       pasada++;
     }
   }
