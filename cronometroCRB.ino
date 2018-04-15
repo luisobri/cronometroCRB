@@ -65,8 +65,8 @@ void comprobarPaso(unsigned long m) {
           total += tmp;
           if (masRapida > tmp) masRapida = tmp;
         }
-        // Ponemos los datos en 
-        int A = 0;    //flag para q solo muestre fin una vez
+        // Ponemos los datos en buble
+        int A = 0;    //flag para q solo muestre "fin" una vez
         while (1) {
           if(A == 0){   //Solo muestra fin si A = 0; despues le asigna 1 para mostrarlo solo 1 vez
             MFS.write("Fin");
@@ -78,7 +78,7 @@ void comprobarPaso(unsigned long m) {
           sprintf(time, "%04d", total);
           MFS.write(time, 1);
           delay(1000);
-          if(numeroVueltas > 1){  //solo muestra la vuelta mas rapida si el numero de vueltas es mayro que uno
+          if(numeroVueltas > 1){  //solo muestra la vuelta mas rapida si el numero de vueltas es mayor que uno
             MFS.write("Rap");
             delay(500);
             sprintf(time, "%04d", masRapida);
